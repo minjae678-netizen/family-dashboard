@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FAF8F5">
+<meta name="description" content="우리 가족 오늘 보드 — 날씨, 세부 여행 D-day, 가족 일정, 할 일, 메모를 한 화면에.">
+<title>우리 가족 오늘 보드</title>
+
+<!-- 홈 화면에 앱처럼 추가 (Android Chrome / iOS Safari) -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="가족 보드">
+<meta name="application-name" content="가족 보드">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap">
+
+<style>
+:root{
+  --bg:#FAF8F5;
+  --card:#FFFFFF;
+  --ink:#2D2A26;
+  --ink-2:#59524B;
+  --muted:#948B82;
+  --faint:#B7ADA2;
+  --line:#EFE8DF;
+  --line-2:#F6F1EA;
+  --coral:#E8734A;
+  --coral-deep:#D8613A;
+  --coral-soft:#FFF1EA;
+  --blue:#4C7DF0;
+  --rose:#DE5F80;
+  --amber:#DFA02B;
+  --green:#4E9E7C;
+  --radius:22px;
+  --shadow:0 1px 2px rgba(72,54,38,.04), 0 12px 28px -16px rgba(72,54,38,.22);
+  --shadow-hover:0 2px 4px rgba(72,54,38,.05), 0 18px 34px -16px rgba(72,54,38,.26);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  min-height:100vh;
+  color:var(--ink);
+  background:
+    radial-gradient(1100px 620px at 4% -12%, #FFF2E7 0%, rgba(255,242,231,0) 58%),
+    radial-gradient(900px 520px at 102% -4%, #EDF4EC 0%, rgba(237,244,236,0) 52%),
+    var(--bg);
+  background-attachment:fixed;
+  font-family:'Pretendard Variable',Pretendard,'Noto Sans KR',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+  font-size:clamp(14px,1.02vw,16px);
+  line-height:1.55;
+  letter-spacing:-0.01em;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  padding-bottom:calc(18px + env(safe-area-inset-bottom));
+}
+h1,h2,h3,p,ul{margin:0}
+ul{list-style:none;padding:0}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--coral);outline-offset:2px;border-radius:8px}
+
+.wrap{max-width:1260px;margin:0 auto;padding:clamp(12px,2.2vw,30px)}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:clamp(12px,1.3vw,18px)}
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:clamp(16px,1.7vw,24px);
+  transition:box-shadow .25s ease, transform .25s ease;
+  min-width:0;
+}
+@media (hover:hover){ .card:hover{box-shadow:var(--shadow-hover);transform:translateY(-2px)} }
+.span-12{grid-column:span 12}
+.span-7{grid-column:span 7}
+.span-5{grid-column:span 5}
+
+/* ── header ───────────────────────────── */
+.header{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto auto;
+  align-items:center;
+  gap:clamp(16px,2.2vw,34px);
+  background:linear-gradient(135deg,#FFFFFF 0%,#FFFCF7 60%,#FFF8F1 100%);
+  padding-top:clamp(18px,2vw,28px);
+  padding-bottom:clamp(18px,2vw,28px);
+}
+.eyebrow{
+  font-size:13px;font-weight:600;color:var(--coral-deep);
+  letter-spacing:.02em;display:flex;align-items:center;gap:7px;
+}
+.eyebrow::before{content:"";width:6px;height:6px;border-radius:99px;background:var(--coral);display:inline-block}
+h1{
+  font-size:clamp(23px,2.7vw,34px);
+  font-weight:800;letter-spacing:-0.035em;line-height:1.2;
+  margin:7px 0 6px;
+}
+.greet{font-size:clamp(13.5px,1.15vw,15.5px);color:var(--ink-2)}
+.greet b{font-weight:700;color:var(--ink)}
+.clock{
+  font-variant-numeric:tabular-nums;
+  font-weight:750;font-size:clamp(28px,3.4vw,44px);
+  letter-spacing:-0.04em;line-height:1;color:var(--ink);
+  display:flex;align-items:baseline;gap:2px;
+}
+.clock .sec{font-size:.44em;font-weight:600;color:var(--faint);letter-spacing:-0.01em}
+.clock .ap{font-size:.3em;font-weight:700;color:var(--muted);margin-left:6px;letter-spacing:0}
+
+/* weather */
+.weather{
+  width:clamp(215px,22vw,250px);
+  background:#FCF8F2;border:1px solid #F3EADC;border-radius:18px;
+  padding:11px 14px 10px;
+  display:flex;flex-direction:column;gap:2px;
+  transition:border-color .2s ease, background .2s ease;
+}
+.weather[data-state="off"]{background:#FBF7F1;border-style:dashed}
+.w-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.w-place{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:12.5px;font-weight:700;color:var(--ink-2);
+  padding:2px 4px;margin:-2px -4px;border-radius:8px;text-align:left;
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.w-place:hover{background:#FFF3E9;color:var(--coral-deep)}
+.w-place-input{
+  width:120px;font-size:12.5px;font-weight:600;padding:2px 6px;
+  border:1px solid #E7DACB;border-radius:7px;background:#fff;
+}
+.w-status{font-size:10.5px;font-weight:700;color:var(--faint);letter-spacing:.02em;flex:none}
+.w-main{display:flex;align-items:center;gap:8px;margin-top:2px}
+.w-emoji{font-size:24px;line-height:1}
+.w-temp{font-size:26px;font-weight:800;letter-spacing:-0.04em;font-variant-numeric:tabular-nums}
+.w-temp sup{font-size:.5em;font-weight:700;vertical-align:super;color:var(--muted);margin-left:1px}
+.w-meta{display:flex;flex-direction:column;line-height:1.28;min-width:0}
+.w-desc{font-size:12.5px;font-weight:700;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.w-range{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.w-foot{
+  font-size:10.5px;color:var(--faint);margin-top:5px;
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+}
+.w-foot .link{color:var(--coral-deep);font-weight:700;text-decoration:underline;text-underline-offset:2px;font-size:10.5px}
+
+/* ── shared bits ──────────────────────── */
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.card-head h2{font-size:clamp(16px,1.45vw,19px);font-weight:750;letter-spacing:-0.025em;display:flex;align-items:center;gap:7px}
+.card-head .sub{font-size:12.5px;color:var(--muted);margin-top:3px}
+.badge{
+  font-size:10.5px;font-weight:800;letter-spacing:.06em;
+  color:var(--coral-deep);background:var(--coral-soft);
+  padding:4px 9px;border-radius:99px;white-space:nowrap;
+}
+.bar{height:6px;border-radius:99px;background:#F2EBE2;overflow:hidden}
+.bar>i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#F2AE8C,#E8734A);transition:width .4s cubic-bezier(.2,.8,.2,1)}
+.bar.green>i{background:linear-gradient(90deg,#8FCBA9,#4E9E7C)}
+.del{
+  width:22px;height:22px;border-radius:7px;flex:none;
+  display:grid;place-items:center;font-size:11px;color:var(--faint);
+  transition:.15s;line-height:1;
+}
+.del:hover{background:#FDEEEA;color:var(--coral-deep)}
+@media (hover:hover){
+  .del{opacity:0}
+  .sched-item:hover .del,.task:hover .del,.note:hover .del,.trip-item:hover .del{opacity:1}
+  .del:focus-visible{opacity:1}
+}
+.add-input{
+  width:100%;border:1px dashed #E5DACC;background:#FCFAF7;
+  border-radius:11px;padding:8px 12px;font-size:13.5px;color:var(--ink);
+  transition:.18s;
+}
+.add-input::placeholder{color:var(--faint)}
+.add-input:focus{outline:none;border-color:#EFB79E;background:#fff;box-shadow:0 0 0 3px #FFF3EC}
+.empty{font-size:13px;color:#CFC5BA}
+
+/* ── trip ─────────────────────────────── */
+.trip{
+  grid-column:span 5;
+  background:linear-gradient(165deg,#FFF7F1 0%,#FFFFFF 42%);
+  display:flex;flex-direction:column;
+}
+.trip-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.dday{
+  font-size:clamp(40px,4.8vw,58px);font-weight:800;letter-spacing:-0.05em;
+  line-height:.95;color:var(--coral-deep);font-variant-numeric:tabular-nums;
+}
+.dday small{font-size:.32em;font-weight:800;letter-spacing:-0.01em;color:#C98F76;margin-left:4px}
+.trip-when{font-size:13.5px;font-weight:700;color:var(--ink-2);text-align:right;line-height:1.35}
+.trip-when span{display:block;font-size:11.5px;font-weight:600;color:var(--muted);margin-top:2px}
+.trip-live{
+  font-size:12.5px;font-weight:600;color:#A98D7B;font-variant-numeric:tabular-nums;
+  background:#FFF6EF;border:1px solid #F7E8DA;border-radius:10px;
+  padding:7px 11px;margin-bottom:12px;display:inline-flex;gap:6px;align-items:center;
+}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.chip{
+  font-size:12px;font-weight:650;color:var(--ink-2);
+  background:#F8F3EC;border:1px solid #F1E8DD;border-radius:99px;padding:4px 10px;
+}
+.trip-list{margin-top:auto}
+.list-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px}
+.list-head h3{font-size:13.5px;font-weight:750;color:var(--ink-2)}
+.prog-label{font-size:11.5px;font-weight:800;color:var(--coral-deep);font-variant-numeric:tabular-nums}
+.trip-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-top:1px solid var(--line-2)}
+.trip-item:first-child{border-top:0}
+.trip-item .body{min-width:0;flex:1}
+.trip-text{display:block;font-size:14px;font-weight:600;line-height:1.35}
+.trip-meta{display:block;font-size:11.5px;color:var(--muted);line-height:1.4;margin-top:2px}
+.trip-item.done .trip-text{color:var(--faint);text-decoration:line-through;text-decoration-thickness:1px}
+.trip-item.done .trip-meta{color:#C8BFB4}
+.trip-note{font-size:11px;color:var(--faint);margin-top:10px;line-height:1.45}
+
+/* check */
+.check{
+  width:21px;height:21px;border-radius:7px;flex:none;margin-top:1px;
+  border:1.6px solid #E3D9CC;background:#fff;
+  display:grid;place-items:center;transition:.16s;
+}
+.check:hover{border-color:#EFB79E;background:#FFFAF6}
+.check[aria-checked="true"]{background:var(--green);border-color:var(--green)}
+.check[aria-checked="true"]::after{
+  content:"";width:9px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;
+  transform:translateY(-1px) rotate(-45deg);
+}
+
+/* ── schedule ─────────────────────────── */
+.sched{grid-column:span 7;display:flex;flex-direction:column}
+.legend{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.legend span{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:650;color:var(--muted)}
+.legend i{width:7px;height:7px;border-radius:99px;display:inline-block}
+.week{display:flex;flex-direction:column;gap:1px;flex:1;justify-content:space-between}
+.day{
+  display:grid;grid-template-columns:52px minmax(0,1fr);gap:10px;align-items:start;
+  padding:7px 10px;border-radius:12px;
+}
+.day+.day{border-top:1px solid var(--line-2)}
+.day.today{background:#FFF7F1}
+.day.today+.day{border-top-color:transparent}
+.day-head{display:flex;align-items:baseline;gap:6px;padding-top:3px}
+.dow{
+  font-size:12px;font-weight:800;color:var(--ink-2);
+  width:18px;text-align:center;flex:none;
+}
+.day.today .dow{color:var(--coral-deep)}
+.day.today .dow::after{content:"";display:block;height:2px;border-radius:9px;background:var(--coral);margin-top:3px}
+.dnum{font-size:10.5px;font-weight:600;color:var(--faint);font-variant-numeric:tabular-nums}
+.day-items{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.sched-item{
+  display:inline-flex;align-items:center;gap:6px;max-width:100%;
+  background:#FBF8F3;border:1px solid #F2EBE1;border-radius:9px;
+  padding:4px 4px 4px 9px;
+}
+.sched-item .dot{width:6px;height:6px;border-radius:99px;flex:none}
+.sched-text{
+  font-size:13.5px;font-weight:550;line-height:1.45;min-width:1ch;
+  padding:1px 2px;border-radius:5px;overflow-wrap:anywhere;
+}
+.sched-text:focus{outline:none;background:#fff;box-shadow:0 0 0 2px #FFE7DA}
+.sched-item .del{width:18px;height:18px;font-size:10px}
+.t-dad{background:var(--blue)}
+.t-mom{background:var(--rose)}
+.t-kid{background:var(--amber)}
+.t-fam{background:var(--green)}
+
+.sched-form{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap}
+.sched-form select{
+  border:1px solid var(--line);background:#FCFAF7;border-radius:10px;
+  padding:8px 6px;font-size:12.5px;font-weight:600;color:var(--ink-2);
+}
+.sched-form .add-input{flex:1;min-width:150px;width:auto}
+.btn-add{
+  border-radius:10px;background:var(--ink);color:#fff;
+  padding:8px 15px;font-size:13px;font-weight:700;white-space:nowrap;
+  transition:.18s;
+}
+.btn-add:hover{background:#151311}
+.btn-add:active{transform:scale(.98)}
+
+/* ── tasks ────────────────────────────── */
+.todos{grid-column:span 7}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:clamp(14px,1.8vw,26px)}
+.col{min-width:0;display:flex;flex-direction:column}
+.col-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:7px}
+.col-head h3{font-size:13.5px;font-weight:750;color:var(--ink-2)}
+.col-head .cnt{font-size:11.5px;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums}
+.col.done-all .cnt{color:var(--green)}
+.col .bar{margin-bottom:10px}
+.task{display:flex;align-items:flex-start;gap:9px;padding:6px 0}
+.task-text{font-size:14px;line-height:1.45;flex:1;min-width:0;padding:1px 2px;border-radius:5px;overflow-wrap:anywhere}
+.task-text:focus{outline:none;background:#FFFDF9;box-shadow:0 0 0 2px #FFE7DA}
+.task.done .task-text{color:var(--faint);text-decoration:line-through;text-decoration-thickness:1px}
+.task .del{width:18px;height:18px;font-size:10px;margin-top:2px}
+.col .add-input{margin-top:8px}
+
+/* ── points (+100P) ───────────────────── */
+.pts-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex:none}
+.pts{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:13px;font-weight:800;font-variant-numeric:tabular-nums;
+  color:#8A5A12;background:linear-gradient(135deg,#FFF5DC,#FFE9BE);
+  border:1px solid #F3DCA9;border-radius:99px;
+  padding:4px 11px 4px 9px;white-space:nowrap;
+  box-shadow:0 1px 0 rgba(255,255,255,.7) inset;
+  transition:background .2s ease,color .2s ease,border-color .2s ease;
+}
+.pts .ico{font-size:13px;line-height:1}
+.pts .num{font-size:14.5px;font-weight:850;letter-spacing:-0.02em}
+.pts.zero{color:#A2937E;background:#FAF6EF;border-color:#EEE6D9}
+.pts.bump{animation:ptsBump .5s cubic-bezier(.2,.9,.3,1)}
+@keyframes ptsBump{0%{transform:scale(1)}30%{transform:scale(1.13)}60%{transform:scale(.98)}100%{transform:scale(1)}}
+.pts-hint{font-size:10.5px;font-weight:650;color:var(--faint);min-height:14px;transition:color .2s ease}
+.pts-hint.gain{color:#B07A16}
+.task{position:relative}
+.point-pop{
+  position:absolute;right:8px;top:0;z-index:2;
+  font-size:11.5px;font-weight:800;color:#9A6A10;
+  background:#FFF7E4;border:1px solid #F5E0B4;border-radius:99px;
+  padding:1px 7px;pointer-events:none;
+  animation:pointPop 1.05s cubic-bezier(.2,.7,.3,1) both;
+}
+.point-pop.minus{color:#A2937E;background:#F8F4EC;border-color:#EBE3D6}
+@keyframes pointPop{
+  0%{opacity:0;transform:translateY(8px) scale(.92)}
+  18%{opacity:1;transform:translateY(-1px) scale(1)}
+  65%{opacity:1;transform:translateY(-13px)}
+  100%{opacity:0;transform:translateY(-20px)}
+}
+
+/* ── 오늘의 저녁 ──────────────────────── */
+.dinner-add{display:flex;gap:6px;margin-top:8px}
+.dinner-add select{
+  flex:none;border:1px solid var(--line);background:#FCFAF7;border-radius:10px;
+  padding:8px 4px;font-size:12.5px;font-weight:650;color:var(--ink-2);
+}
+.dinner-add .add-input{flex:1;min-width:0;width:auto}
+.dinner-item .role{
+  flex:none;margin-top:3px;
+  font-size:10px;font-weight:800;letter-spacing:.02em;
+  padding:2px 6px;border-radius:99px;
+  background:#F3EFE8;color:#7C7268;
+}
+.dinner-item .role.main{background:#FFE9E1;color:#C2562F}
+.dinner-item .role.soup{background:#EAF0FB;color:#3C63B8}
+.dinner-item .role.side{background:#E8F3E7;color:#3F7C58}
+.dinner-item .role.snack{background:#FCF1DB;color:#96690F}
+.dinner-item.ready .task-text{color:#7E9382}
+.dinner-item.ready .role{opacity:.6}
+
+/* ── notes ────────────────────────────── */
+.memo{grid-column:span 5;display:flex;flex-direction:column}
+.notes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.note{
+  position:relative;border-radius:12px;padding:12px 12px 22px;
+  background:var(--nc,#FFF4D8);
+  box-shadow:0 1px 1px rgba(72,54,38,.04), 0 6px 12px -9px rgba(72,54,38,.3);
+  min-height:88px;display:flex;flex-direction:column;justify-content:flex-start;
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+.note:nth-child(4n+1){transform:rotate(-.7deg)}
+.note:nth-child(4n+2){transform:rotate(.55deg)}
+.note:nth-child(4n+3){transform:rotate(.3deg)}
+.note:nth-child(4n+4){transform:rotate(-.4deg)}
+.note:hover{transform:rotate(0) translateY(-1px);box-shadow:0 1px 1px rgba(72,54,38,.05), 0 12px 18px -10px rgba(72,54,38,.34)}
+.note-text{
+  font-size:13.5px;font-weight:550;line-height:1.5;color:#4A4034;
+  overflow-wrap:anywhere;white-space:pre-wrap;
+}
+.note-text:focus{outline:none;box-shadow:0 0 0 2px rgba(255,255,255,.9) inset}
+.note-date{position:absolute;left:12px;bottom:7px;font-size:10px;font-weight:700;color:rgba(74,64,52,.45);font-variant-numeric:tabular-nums}
+.note .del{position:absolute;right:6px;top:6px;width:20px;height:20px;font-size:10px;color:rgba(74,64,52,.4)}
+.note .del:hover{background:rgba(255,255,255,.7);color:var(--coral-deep)}
+.memo-add{margin-top:12px;display:flex;gap:8px;align-items:flex-end}
+.memo-add textarea{
+  flex:1;resize:none;border:1px dashed #E5DACC;background:#FCFAF7;border-radius:12px;
+  padding:9px 12px;font-size:13.5px;line-height:1.45;min-height:42px;max-height:120px;
+}
+.memo-add textarea::placeholder{color:var(--faint)}
+.memo-add textarea:focus{outline:none;border-color:#EFB79E;background:#fff;box-shadow:0 0 0 3px #FFF3EC}
+
+/* ── footer ───────────────────────────── */
+.foot{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:18px 6px 4px;font-size:11.5px;color:var(--faint);
+}
+.foot .ghost{font-size:11.5px;font-weight:700;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+.foot .ghost:hover{color:var(--coral-deep)}
+
+/* ── modal ────────────────────────────── */
+.modal{
+  position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:20px;
+  background:rgba(45,42,38,.34);backdrop-filter:blur(3px);
+}
+.modal[hidden]{display:none}
+.modal-box{
+  background:#fff;border-radius:18px;padding:22px;max-width:380px;width:100%;
+  box-shadow:0 30px 60px -20px rgba(45,42,38,.4);
+  animation:pop .18s ease both;
+}
+.modal-box h3{font-size:16.5px;font-weight:750;margin-bottom:6px}
+.modal-box p{font-size:13.5px;color:var(--ink-2);line-height:1.5}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.modal-actions button{border-radius:10px;padding:9px 16px;font-size:13.5px;font-weight:700}
+.modal-actions .ghost{background:#F6F1EA;color:var(--ink-2)}
+.modal-actions .primary{background:var(--coral);color:#fff}
+.modal-actions .primary:hover{background:var(--coral-deep)}
+
+/* ── motion ───────────────────────────── */
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+.grid>.card{animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
+.grid>.card:nth-child(2){animation-delay:.05s}
+.grid>.card:nth-child(3){animation-delay:.1s}
+.grid>.card:nth-child(4){animation-delay:.15s}
+.grid>.card:nth-child(5){animation-delay:.2s}
+
+/* ── responsive ───────────────────────── */
+@media (max-width:1060px){
+  .header{grid-template-columns:minmax(0,1fr) auto}
+  .weather{grid-column:span 2;width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:10px 16px}
+  .w-top{flex:none}
+  .w-main{margin-top:0}
+  .w-foot{margin-top:0;margin-left:auto}
+}
+@media (max-width:900px){
+  .span-7,.span-5,.trip,.sched,.todos,.memo{grid-column:span 12}
+  .notes{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+}
+@media (max-width:640px){
+  .header{grid-template-columns:1fr;gap:14px}
+  .clock{justify-self:flex-start;margin:2px 0 0}
+  .weather{grid-column:auto;width:100%}
+  .two-col{grid-template-columns:1fr;gap:18px}
+  .day{grid-template-columns:40px minmax(0,1fr);padding:8px 6px}
+  .dow{width:16px}
+  .clock{font-size:30px}
+  .weather[data-state="on"] .w-status{display:none}
+  .weather{flex-direction:row;flex-wrap:wrap;align-items:center;gap:4px 12px;padding:10px 12px}
+  .w-main{margin-top:0}
+  .w-foot{margin-left:auto}
+  .trip-hero{flex-direction:column;align-items:flex-start}
+  .trip-when{text-align:left}
+  .pts-wrap{align-items:flex-start}
+  .foot{flex-direction:column;align-items:flex-start}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .point-pop{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <main class="grid">
+
+    <!-- ── HEADER ─────────────────────────────── -->
+    <header class="card header span-12">
+      <div>
+        <p class="eyebrow" id="todayLabel">2026년 11월 19일 목요일</p>
+        <h1>우리 가족 오늘 보드</h1>
+        <p class="greet"><b id="greetText">좋은 저녁이에요</b> · 오늘도 함께 잘 보내요 🌿</p>
+      </div>
+      <div class="clock" aria-label="현재 시각">
+        <span id="clockHM">--:--</span><span class="sec" id="clockS">:--</span>
+      </div>
+      <div class="weather" id="weatherBox" data-state="loading">
+        <div class="w-top">
+          <button class="w-place" id="wPlace" type="button" title="지역 바꾸기">📍 <span id="wName">용인시 처인구</span></button>
+          <input class="w-place-input" id="wPlaceInput" type="text" maxlength="30" hidden aria-label="날씨 지역 이름">
+          <span class="w-status" id="wStatus">지금</span>
+        </div>
+        <div class="w-main">
+          <span class="w-emoji" id="wEmoji">🌤️</span>
+          <span class="w-temp"><span id="wTemp">--</span><sup>°</sup></span>
+          <span class="w-meta">
+            <span class="w-desc" id="wDesc">날씨 확인 중</span>
+            <span class="w-range" id="wRange">최고 --° · 최저 --°</span>
+          </span>
+        </div>
+        <div class="w-foot" id="wFoot">Open-Meteo · 실시간</div>
+      </div>
+    </header>
+
+    <!-- ── TRIP ───────────────────────────────── -->
+    <section class="card trip" aria-labelledby="tripTitle">
+      <div class="card-head">
+        <h2 id="tripTitle">✈️ 세부 가족 여행</h2>
+        <span class="badge" id="ddayBadge">D-DAY</span>
+      </div>
+
+      <div class="trip-hero">
+        <div class="dday" id="ddayNum">D-87</div>
+        <p class="trip-when">2027년 2월 14일 (일) 출발<span>세부 · 필리핀</span></p>
+      </div>
+      <p class="trip-live">🕒 <span id="tripLive">출발까지 계산 중…</span></p>
+      <div class="chips">
+        <span class="chip">2/14 ~ 2/20 · 6박 7일</span>
+        <span class="chip">성인 2 + 9세 1명</span>
+        <span class="chip">인천 ↔ 세부 직항</span>
+      </div>
+
+      <div class="trip-list">
+        <div class="list-head">
+          <h3>여행 준비 체크리스트</h3>
+          <span class="prog-label" id="tripProgress">0/0</span>
+        </div>
+        <div class="bar"><i id="tripBar"></i></div>
+        <ul id="tripItems"></ul>
+        <input class="add-input" id="tripAdd" type="text" maxlength="80" placeholder="+ 준비할 일 추가 (Enter)">
+        <p class="trip-note">항공·숙소 요금은 2026년 11월 19일 조회 기준이에요. 예약은 아직 하지 않았어요.</p>
+      </div>
+    </section>
+
+    <!-- ── SCHEDULE ───────────────────────────── -->
+    <section class="card sched" aria-labelledby="schedTitle">
+      <div class="card-head">
+        <div>
+          <h2 id="schedTitle">📅 이번 주 가족 일정</h2>
+          <p class="sub" id="weekRange">이번 주</p>
+        </div>
+        <div class="legend" aria-hidden="true">
+          <span><i class="t-dad"></i>아빠</span>
+          <span><i class="t-mom"></i>엄마</span>
+          <span><i class="t-kid"></i>아이</span>
+          <span><i class="t-fam"></i>가족</span>
+        </div>
+      </div>
+      <div class="week" id="weekList"></div>
+      <form class="sched-form" id="schedForm">
+        <select id="schedDay" aria-label="요일"></select>
+        <select id="schedTag" aria-label="누구 일정">
+          <option value="아빠">아빠</option>
+          <option value="엄마">엄마</option>
+          <option value="아이">아이</option>
+          <option value="가족" selected>가족</option>
+        </select>
+        <input class="add-input" id="schedInput" type="text" maxlength="60" placeholder="일정 입력 후 Enter">
+        <button class="btn-add" type="submit">추가</button>
+      </form>
+    </section>
+
+    <!-- ── TASKS ──────────────────────────────── -->
+    <section class="card todos" aria-labelledby="todoTitle">
+      <div class="card-head">
+        <div>
+          <h2 id="todoTitle">✅ 오늘의 할 일</h2>
+          <p class="sub" id="todayShort">11월 19일 목요일</p>
+        </div>
+        <div class="pts-wrap">
+          <span class="pts zero" id="ptsBadge" title="오늘의 할 일로 모은 포인트" aria-live="polite">
+            <span class="ico" aria-hidden="true">🏆</span><span class="num" id="ptsNum">0</span>P
+          </span>
+          <span class="pts-hint" id="ptsHint">할 일 하나 = 100P</span>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="col" id="todoCol">
+          <div class="col-head"><h3>오늘의 할 일</h3><span class="cnt" id="todoCount">0/0</span></div>
+          <div class="bar"><i id="todoBar"></i></div>
+          <ul id="todoList"></ul>
+          <input class="add-input" id="todoAdd" type="text" maxlength="70" placeholder="+ 할 일 추가 (Enter)">
+        </div>
+        <div class="col" id="dinnerCol">
+          <div class="col-head"><h3>🍽️ 오늘의 저녁</h3><span class="cnt" id="dinnerCount">0/0</span></div>
+          <div class="bar green"><i id="dinnerBar"></i></div>
+          <ul id="dinnerList"></ul>
+          <form class="dinner-add" id="dinnerForm">
+            <select id="dinnerRole" aria-label="메뉴 구분">
+              <option value="메인" selected>메인</option>
+              <option value="국·찌개">국·찌개</option>
+              <option value="반찬">반찬</option>
+              <option value="간식">간식</option>
+            </select>
+            <input class="add-input" id="dinnerAdd" type="text" maxlength="40" placeholder="+ 메뉴 추가 (Enter)">
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── MEMO ───────────────────────────────── -->
+    <section class="card memo" aria-labelledby="memoTitle">
+      <div class="card-head">
+        <div>
+          <h2 id="memoTitle">📝 가족 메모</h2>
+          <p class="sub">서로에게 남기는 한마디</p>
+        </div>
+      </div>
+      <div class="notes" id="noteList"></div>
+      <form class="memo-add" id="memoForm">
+        <textarea id="memoInput" rows="2" maxlength="140" placeholder="메모를 남겨 보세요 (Enter로 붙이기)"></textarea>
+        <button class="btn-add" type="submit">붙이기</button>
+      </form>
+    </section>
+
+  </main>
+
+  <footer class="foot">
+    <span>수정한 내용은 이 브라우저에 자동 저장돼요 · <span id="saveState">저장 준비됨</span></span>
+    <button class="ghost" id="resetBtn" type="button">샘플로 되돌리기</button>
+  </footer>
+</div>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h3 id="modalTitle">샘플로 되돌릴까요?</h3>
+    <p>지금까지 적어 둔 일정·할 일·오늘의 저녁·메모가 모두 사라지고 처음 상태로 돌아가요. 포인트도 처음 상태로 돌아가요.</p>
+    <div class="modal-actions">
+      <button class="ghost" id="modalCancel" type="button">취소</button>
+      <button class="primary" id="modalOk" type="button">되돌리기</button>
+    </div>
+  </div>
+</div>
+
+<noscript><p style="padding:16px;text-align:center">이 보드는 자바스크립트가 켜져 있어야 저장과 편집이 동작해요.</p></noscript>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ───────────── 기본값 ───────────── */
+  var KEY = "familyBoard.v2";              // 스키마를 바꿔서(장보기 → 오늘의 저녁) 새 키로 올렸어요
+  var OLD_KEY = "familyBoard.v1";           // 이전 버전 데이터는 한 번 옮겨 오고 지워요
+  var WCACHE = "familyBoard.weather.v1";
+  var WEEK = ["일","월","화","수","목","금","토"];
+  var DOW_ORDER = [1,2,3,4,5,6,0];           // 월요일 시작
+  var TRIP_ISO = "2027-02-14T21:35:00+09:00";
+  var TRIP_DATE = new Date(2027, 1, 14);     // 2027-02-14 (로컬 자정)
+  var NOTE_COLORS = ["#FFF4D8","#FFE8E4","#E8F2E4","#E6EEFB","#F5EBFB"];
+  var TAG_CLASS = { "아빠":"t-dad", "엄마":"t-mom", "아이":"t-kid", "가족":"t-fam" };
+  var PT = 100;                              // 할 일 하나당 포인트
+  var ROLES = ["메인","국·찌개","반찬","간식"];
+  var ROLE_CLASS = { "메인":"main", "국·찌개":"soup", "반찬":"side", "간식":"snack" };
+
+  function uid(){ return Math.random().toString(36).slice(2,9); }
+  function $(s, r){ return (r||document).querySelector(s); }
+  function esc(s){
+    return String(s==null?"":s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  function defaults(){
+    return {
+      weather: { name:"용인시 처인구", lat:37.234, lon:127.201 },
+      trip: [
+        { id:uid(), text:"항공권 예약", meta:"세부퍼시픽 5J 직항 · 3인 약 178만 원 (위탁수하물 별도)", done:false },
+        { id:uid(), text:"숙소 예약", meta:"제이파크 6박 약 154만 원(조식 포함) / 크림슨 디럭스 175만 원", done:false },
+        { id:uid(), text:"여권 만료일 확인", meta:"출발일 기준 6개월 이상 남아 있어야 해요", done:false },
+        { id:uid(), text:"액티비티 예약", meta:"막탄 호핑 · 오션파크 · 사파리 (2027년 2월분은 12월 중순 오픈 예상)", done:false },
+        { id:uid(), text:"환전 · 유심 준비", meta:"페소 환전, 아이 폰 eSIM", done:false }
+      ],
+      schedule: [
+        { id:uid(), dow:1, tag:"아이", text:"학교 준비물 · 수영복 챙기기" },
+        { id:uid(), dow:2, tag:"엄마", text:"수영 교실 19:00" },
+        { id:uid(), dow:3, tag:"가족", text:"저녁 먹고 단지 산책" },
+        { id:uid(), dow:4, tag:"아빠", text:"팀 회의 14:00" },
+        { id:uid(), dow:5, tag:"아이", text:"받아쓰기 시험" },
+        { id:uid(), dow:6, tag:"가족", text:"세부 숙소 · 항공권 최종 비교" },
+        { id:uid(), dow:0, tag:"가족", text:"할머니 댁 방문" }
+      ],
+      todos: [
+        { id:uid(), text:"아이 여권 만료일 확인", done:false },
+        { id:uid(), text:"세부 항공권 예약 링크 다시 열어 두기", done:true },
+        { id:uid(), text:"제이파크 vs 크림슨 숙소 최종 결정", done:false },
+        { id:uid(), text:"저녁 8시 가족 회의", done:false },
+        { id:uid(), text:"아이 수영가방 미리 챙겨 두기", done:true }
+      ],
+      dinner: [
+        { id:uid(), role:"메인", text:"돼지고기 김치찌개", ready:true },
+        { id:uid(), role:"반찬", text:"계란말이", ready:false },
+        { id:uid(), role:"반찬", text:"어묵볶음", ready:false },
+        { id:uid(), role:"간식", text:"귤", ready:false }
+      ],
+      notes: [
+        { id:uid(), text:"아이 수영복 · 물안경 챙기기 🏊", at:Date.now() },
+        { id:uid(), text:"세부 숙소는 12월 중순에 2월 날짜로 다시 확인!", at:Date.now() },
+        { id:uid(), text:"금요일 저녁은 외식 🍜", at:Date.now() },
+        { id:uid(), text:"아이랑 같이 여권 사진 찍기 📸", at:Date.now() }
+      ]
+    };
+  }
+
+  /* ───────────── 상태 ───────────── */
+  var storageOK = true;
+  var state = loadState();
+  var weatherCache = loadCache();
+
+  function loadState(){
+    var d = defaults();
+    var s = readKey(KEY);
+    if(!s){
+      // 이전 버전(v1)에 적어 둔 일정·할 일·메모는 그대로 살리고, 장보기는 오늘의 저녁 기본 메뉴로 바꿔요
+      var old = readKey(OLD_KEY);
+      if(old){
+        s = normalize(old, d);
+        try{
+          localStorage.setItem(KEY, JSON.stringify(s));
+          localStorage.removeItem(OLD_KEY);
+        }catch(e){}
+        return s;
+      }
+    }
+    return normalize(s, d);
+  }
+  function readKey(k){
+    try{ var raw = localStorage.getItem(k); return raw ? JSON.parse(raw) : null; }catch(e){ return null; }
+  }
+  function normalize(s, d){
+    if(!s || typeof s !== "object") return d;
+    return {
+      weather: (s.weather && isFinite(s.weather.lat) && isFinite(s.weather.lon)) ? s.weather : d.weather,
+      trip: Array.isArray(s.trip) ? s.trip : d.trip,
+      schedule: Array.isArray(s.schedule) ? s.schedule : d.schedule,
+      todos: Array.isArray(s.todos) ? s.todos.map(function(t){
+        return { id:t.id || uid(), text:String(t.text || ""), done:!!t.done };
+      }).filter(function(t){ return t.text; }) : d.todos,
+      dinner: Array.isArray(s.dinner) ? s.dinner.map(function(x){
+        return {
+          id: x.id || uid(),
+          role: ROLE_CLASS[x.role] ? x.role : "메인",
+          text: String(x.text || ""),
+          ready: !!x.ready
+        };
+      }).filter(function(x){ return x.text; }) : d.dinner,
+      notes: Array.isArray(s.notes) ? s.notes : d.notes
+    };
+  }
+  function loadCache(){
+    try{ return JSON.parse(localStorage.getItem(WCACHE) || "null"); }catch(e){ return null; }
+  }
+  function save(){
+    try{
+      localStorage.setItem(KEY, JSON.stringify(state));
+      storageOK = true;
+      setSaveState("저장됨 · " + hhmm(new Date()));
+    }catch(e){
+      storageOK = false;
+      setSaveState("이 브라우저에는 저장할 수 없어요");
+    }
+  }
+  function setSaveState(t){ var el = $("#saveState"); if(el) el.textContent = t; }
+
+  /* ───────────── 시간 · 날짜 ───────────── */
+  function pad(n){ return String(n).padStart(2,"0"); }
+  function hhmm(d){ return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
+  function dateKo(d){
+    return d.getFullYear() + "년 " + (d.getMonth()+1) + "월 " + d.getDate() + "일 " + WEEK[d.getDay()] + "요일";
+  }
+  function shortKo(d){ return (d.getMonth()+1) + "월 " + d.getDate() + "일 " + WEEK[d.getDay()] + "요일"; }
+  function md(d){ return (d.getMonth()+1) + "월 " + d.getDate() + "일"; }
+
+  function greeting(h){
+    if(h >= 5 && h < 11) return "좋은 아침이에요";
+    if(h >= 11 && h < 14) return "즐거운 점심시간이에요";
+    if(h >= 14 && h < 18) return "좋은 오후예요";
+    if(h >= 18 && h < 23) return "좋은 저녁이에요";
+    return "늦은 밤이에요, 푹 쉬어요";
+  }
+
+  var lastDay = "";
+  function tickClock(){
+    var now = new Date();
+    $("#clockHM").textContent = hhmm(now);
+    $("#clockS").textContent = ":" + pad(now.getSeconds());
+    var dstr = dateKo(now);
+    if(dstr !== lastDay){
+      lastDay = dstr;
+      $("#todayLabel").textContent = dstr;
+      $("#todayShort").textContent = shortKo(now);
+      renderSchedule();
+    }
+    $("#greetText").textContent = greeting(now.getHours());
+    tickTrip(now);
+  }
+
+  /* ───────────── D-day ───────────── */
+  function tickTrip(now){
+    var t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var days = Math.round((TRIP_DATE - t0) / 86400000);
+    var num = $("#ddayNum"), badge = $("#ddayBadge");
+    if(days > 0){ num.textContent = "D-" + days; }
+    else if(days === 0){ num.textContent = "D-DAY 🎉"; }
+    else { num.textContent = "D+" + Math.abs(days); }
+    badge.textContent = days > 0 ? "출발까지" : (days === 0 ? "오늘이에요" : "다녀왔어요");
+
+    var target = new Date(TRIP_ISO).getTime();
+    var diff = target - now.getTime();
+    var live = $("#tripLive");
+    if(diff > 0){
+      var d = Math.floor(diff/86400000);
+      var h = Math.floor(diff%86400000/3600000);
+      var m = Math.floor(diff%3600000/60000);
+      var s = Math.floor(diff%60000/1000);
+      live.textContent = "출발까지 " + d + "일 " + pad(h) + "시간 " + pad(m) + "분 " + pad(s) + "초";
+    } else {
+      live.textContent = "여행이 시작됐어요 — 즐거운 시간 보내세요!";
+    }
+  }
+
+  /* ───────────── 날씨 ───────────── */
+  var WMO = {
+    0:["맑음","☀️"], 1:["대체로 맑음","🌤️"], 2:["구름 조금","⛅"], 3:["흐림","☁️"],
+    45:["안개","🌫️"], 48:["서리 안개","🌫️"],
+    51:["약한 이슬비","🌦️"], 53:["이슬비","🌦️"], 55:["강한 이슬비","🌦️"],
+    56:["어는 이슬비","🌧️"], 57:["어는 이슬비","🌧️"],
+    61:["약한 비","🌧️"], 63:["비","🌧️"], 65:["강한 비","🌧️"],
+    66:["어는 비","🌧️"], 67:["어는 비","🌧️"],
+    71:["약한 눈","🌨️"], 73:["눈","🌨️"], 75:["많은 눈","❄️"], 77:["눈 알갱이","🌨️"],
+    80:["약한 소나기","🌦️"], 81:["소나기","🌦️"], 82:["강한 소나기","⛈️"],
+    85:["소나기 눈","🌨️"], 86:["많은 소나기 눈","❄️"],
+    95:["뇌우","⛈️"], 96:["뇌우 · 우박","⛈️"], 99:["뇌우 · 우박","⛈️"]
+  };
+  function wmoText(c){
+    if(c == null) return ["—","🌤️"];
+    if(WMO[c]) return WMO[c];
+    if(c >= 1 && c <= 3) return ["구름","⛅"];
+    if(c >= 51 && c <= 67) return ["비","🌧️"];
+    if(c >= 71 && c <= 77) return ["눈","🌨️"];
+    if(c >= 80 && c <= 82) return ["소나기","🌦️"];
+    if(c >= 95) return ["뇌우","⛈️"];
+    return ["—","🌤️"];
+  }
+
+  function renderPlace(){
+    $("#wName").textContent = state.weather.name || "용인시 처인구";
+  }
+
+  function setWeatherStatus(t){ $("#wStatus").textContent = t; }
+
+  function ok(v){ return v !== null && v !== undefined && v !== "" && isFinite(v); }
+
+  function renderWeather(c){
+    var box = $("#weatherBox");
+    if(!c || c.error){
+      box.dataset.state = "off";
+      $("#wTemp").textContent = "--";
+      $("#wEmoji").textContent = "🌥️";
+      $("#wDesc").textContent = "날씨를 불러오지 못했어요";
+      $("#wRange").textContent = "—";
+      $("#wFoot").innerHTML = '인터넷 연결을 확인해 주세요 · <button class="link" id="wRetry" type="button">다시 시도</button>';
+      setWeatherStatus("오프라인");
+      bindRetry();
+      return;
+    }
+    var w = wmoText(c.code);
+    box.dataset.state = c.offline ? "off" : "on";
+    $("#wEmoji").textContent = w[1];
+    $("#wTemp").textContent = ok(c.temp) ? c.temp : "--";
+    $("#wDesc").textContent = w[0];
+
+    var range = [];
+    if(ok(c.max) && ok(c.min)) range.push("최고 " + c.max + "° · 최저 " + c.min + "°");
+    if(ok(c.rain)) range.push("강수 " + c.rain + "%");
+    $("#wRange").textContent = range.length ? range.join(" · ") : "—";
+
+    setWeatherStatus(c.offline ? "오프라인" : "지금");
+
+    var foot = [];
+    if(ok(c.feels)) foot.push("체감 " + c.feels + "°");
+    if(ok(c.hum)) foot.push("습도 " + c.hum + "%");
+    if(c.offline){
+      if(ok(c.at)) foot.push("마지막 확인 " + hhmm(new Date(c.at)));
+      $("#wFoot").innerHTML = esc(foot.join(" · ")) +
+        ' · <button class="link" id="wRetry" type="button">↻ 다시 시도</button>';
+    } else {
+      foot.push("Open-Meteo");
+      $("#wFoot").textContent = foot.join(" · ");
+    }
+    bindRetry();
+  }
+
+  function bindRetry(){
+    var btn = $("#wRetry");
+    if(btn) btn.addEventListener("click", fetchWeather);
+  }
+
+  function fetchWeather(){
+    var w = state.weather;
+    setWeatherStatus("확인 중");
+    var url = "https://api.open-meteo.com/v1/forecast?latitude=" + encodeURIComponent(w.lat) +
+      "&longitude=" + encodeURIComponent(w.lon) +
+      "&current=temperature_2m,weather_code,apparent_temperature,relative_humidity_2m" +
+      "&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max" +
+      "&timezone=Asia%2FSeoul&forecast_days=1";
+
+    var ctrl = ("AbortController" in window) ? new AbortController() : null;
+    var timer = setTimeout(function(){ if(ctrl) ctrl.abort(); }, 8000);
+
+    fetch(url, ctrl ? {signal:ctrl.signal, cache:"no-store"} : {cache:"no-store"})
+      .then(function(r){ if(!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .then(function(d){
+        clearTimeout(timer);
+        var cur = d.current || {}, day = d.daily || {};
+        function num(v){ return (v == null || isNaN(v)) ? null : Math.round(v); }
+        var c = {
+          temp: num(cur.temperature_2m),
+          feels: num(cur.apparent_temperature),
+          hum: num(cur.relative_humidity_2m),
+          code: num(cur.weather_code),
+          max: day.temperature_2m_max ? num(day.temperature_2m_max[0]) : null,
+          min: day.temperature_2m_min ? num(day.temperature_2m_min[0]) : null,
+          rain: day.precipitation_probability_max ? num(day.precipitation_probability_max[0]) : null,
+          at: Date.now(),
+          offline: false
+        };
+        weatherCache = c;
+        try{ localStorage.setItem(WCACHE, JSON.stringify(c)); }catch(e){}
+        renderWeather(c);
+      })
+      .catch(function(){
+        clearTimeout(timer);
+        if(weatherCache) renderWeather(Object.assign({}, weatherCache, {offline:true}));
+        else renderWeather({error:true});
+      });
+  }
+
+  function geocodeAndSet(q){
+    q = (q || "").trim();
+    if(!q) return;
+    setWeatherStatus("지역 찾는 중");
+    fetch("https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(q) + "&count=1&language=ko&format=json")
+      .then(function(r){ if(!r.ok) throw new Error("HTTP"); return r.json(); })
+      .then(function(d){
+        if(!d.results || !d.results.length){
+          setWeatherStatus("지역을 찾지 못했어요");
+          setTimeout(function(){ if(weatherCache) renderWeather(weatherCache); }, 1600);
+          return;
+        }
+        var p = d.results[0];
+        var nm = (p.admin1 && p.admin1 !== p.name ? p.admin1 + " " : "") + p.name;
+        state.weather = { name: nm, lat: p.latitude, lon: p.longitude };
+        save(); renderPlace(); fetchWeather();
+      })
+      .catch(function(){
+        setWeatherStatus("지역을 찾지 못했어요");
+        setTimeout(function(){ if(weatherCache) renderWeather(weatherCache); }, 1600);
+      });
+  }
+
+  /* ───────────── 여행 체크리스트 ───────────── */
+  function renderTrip(){
+    var list = $("#tripItems");
+    list.innerHTML = state.trip.map(function(it){
+      return '<li class="trip-item' + (it.done ? " done" : "") + '" data-id="' + it.id + '">' +
+        '<button class="check" role="checkbox" aria-checked="' + (!!it.done) + '" data-act="toggle-trip" data-id="' + it.id + '" aria-label="완료 표시"></button>' +
+        '<span class="body">' +
+          '<span class="trip-text">' + esc(it.text) + '</span>' +
+          (it.meta ? '<span class="trip-meta">' + esc(it.meta) + '</span>' : '') +
+        '</span>' +
+        '<button class="del" data-act="del-trip" data-id="' + it.id + '" aria-label="삭제">✕</button>' +
+      '</li>';
+    }).join("");
+
+    var total = state.trip.length;
+    var done = state.trip.filter(function(i){ return i.done; }).length;
+    $("#tripProgress").textContent = done + "/" + total;
+    $("#tripBar").style.width = (total ? Math.round(done/total*100) : 0) + "%";
+  }
+
+  /* ───────────── 이번 주 일정 ───────────── */
+  function weekDates(){
+    var now = new Date();
+    var dow = now.getDay();
+    var monday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    monday.setDate(monday.getDate() + (dow === 0 ? -6 : 1 - dow));
+    return DOW_ORDER.map(function(d, i){
+      var dt = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+      return { dow:d, date:dt };
+    });
+  }
+
+  function renderSchedule(){
+    var days = weekDates();
+    var today = new Date().getDay();
+    $("#weekRange").textContent = md(days[0].date) + " ~ " + md(days[6].date);
+
+    $("#weekList").innerHTML = days.map(function(d){
+      var items = state.schedule.filter(function(i){ return i.dow === d.dow; });
+      var cls = "day" + (d.dow === today ? " today" : "");
+      var inner = items.length ? items.map(function(i){
+        return '<span class="sched-item" data-id="' + i.id + '">' +
+          '<span class="dot ' + (TAG_CLASS[i.tag] || "t-fam") + '" title="' + esc(i.tag) + '"></span>' +
+          '<span class="sched-text" contenteditable="true" spellcheck="false" data-edit="schedule:' + i.id + '">' + esc(i.text) + '</span>' +
+          '<button class="del" data-act="del-schedule" data-id="' + i.id + '" aria-label="일정 삭제">✕</button>' +
+        '</span>';
+      }).join("") : '<span class="empty">—</span>';
+      return '<div class="' + cls + '">' +
+        '<div class="day-head"><span class="dow">' + WEEK[d.dow] + '</span><span class="dnum">' + (d.date.getMonth()+1) + '/' + d.date.getDate() + '</span></div>' +
+        '<div class="day-items">' + inner + '</div>' +
+      '</div>';
+    }).join("");
+  }
+
+  function fillDaySelect(){
+    var sel = $("#schedDay");
+    var today = new Date().getDay();
+    sel.innerHTML = DOW_ORDER.map(function(d){
+      return '<option value="' + d + '"' + (d === today ? " selected" : "") + '>' + WEEK[d] + '</option>';
+    }).join("");
+  }
+
+  /* ───────────── 할 일 · 오늘의 저녁 · 포인트 ───────────── */
+  function taskHTML(t, kind){
+    return '<li class="task' + (t.done ? " done" : "") + '" data-id="' + t.id + '">' +
+      '<button class="check" role="checkbox" aria-checked="' + (!!t.done) + '" data-act="toggle-' + kind + '" data-id="' + t.id + '" aria-label="완료 표시"></button>' +
+      '<span class="task-text" contenteditable="true" spellcheck="false" data-edit="' + kind + ':' + t.id + '">' + esc(t.text) + '</span>' +
+      '<button class="del" data-act="del-' + kind + '" data-id="' + t.id + '" aria-label="삭제">✕</button>' +
+    '</li>';
+  }
+
+  function dinnerHTML(x){
+    var rc = ROLE_CLASS[x.role] || "main";
+    return '<li class="task dinner-item' + (x.ready ? " ready" : "") + '" data-id="' + x.id + '">' +
+      '<button class="check" role="checkbox" aria-checked="' + (!!x.ready) + '" data-act="toggle-dinner" data-id="' + x.id + '" aria-label="준비 완료"></button>' +
+      '<span class="role ' + rc + '">' + esc(x.role) + '</span>' +
+      '<span class="task-text" contenteditable="true" spellcheck="false" data-edit="dinner:' + x.id + '">' + esc(x.text) + '</span>' +
+      '<button class="del" data-act="del-dinner" data-id="' + x.id + '" aria-label="메뉴 삭제">✕</button>' +
+    '</li>';
+  }
+
+  function pointsOf(){
+    return state.todos.filter(function(t){ return t.done; }).length * PT;
+  }
+
+  function renderPoints(){
+    var p = pointsOf();
+    var badge = $("#ptsBadge");
+    if(!badge) return;
+    $("#ptsNum").textContent = p;
+    badge.classList.toggle("zero", p === 0);
+  }
+
+  function renderTasks(){
+    $("#todoList").innerHTML = state.todos.map(function(t){ return taskHTML(t,"todos"); }).join("");
+
+    var total = state.todos.length;
+    var done = state.todos.filter(function(i){ return i.done; }).length;
+    $("#todoCount").textContent = done + "/" + total;
+    $("#todoBar").style.width = (total ? Math.round(done/total*100) : 0) + "%";
+    $("#todoCol").classList.toggle("done-all", total > 0 && done === total);
+
+    renderPoints();
+    renderDinner();
+  }
+
+  function renderDinner(){
+    var list = $("#dinnerList");
+    if(!list) return;
+    var order = state.dinner.map(function(x, i){ return { x:x, i:i }; }).sort(function(a, b){
+      var ra = ROLES.indexOf(a.x.role), rb = ROLES.indexOf(b.x.role);
+      if(ra < 0) ra = 99; if(rb < 0) rb = 99;
+      return ra === rb ? a.i - b.i : ra - rb;
+    });
+    list.innerHTML = order.length
+      ? order.map(function(o){ return dinnerHTML(o.x); }).join("")
+      : '<li class="empty" style="padding:4px 0">오늘 저녁 메뉴를 아직 정하지 않았어요.</li>';
+
+    var total = state.dinner.length;
+    var ready = state.dinner.filter(function(i){ return i.ready; }).length;
+    $("#dinnerCount").textContent = ready + "/" + total;
+    $("#dinnerBar").style.width = (total ? Math.round(ready/total*100) : 0) + "%";
+    $("#dinnerCol").classList.toggle("done-all", total > 0 && ready === total);
+  }
+
+  /* +100P 표시 */
+  var hintTimer = null;
+  function bumpPoints(delta, rowEl){
+    renderPoints();
+    var badge = $("#ptsBadge");
+    if(badge){
+      badge.classList.remove("bump");
+      void badge.offsetWidth;
+      badge.classList.add("bump");
+    }
+    var hint = $("#ptsHint");
+    if(hint){
+      hint.textContent = delta > 0 ? ("+" + delta + "P 적립!") : (delta + "P 빠졌어요");
+      hint.classList.toggle("gain", delta > 0);
+      clearTimeout(hintTimer);
+      hintTimer = setTimeout(function(){
+        hint.textContent = "할 일 하나 = " + PT + "P";
+        hint.classList.remove("gain");
+      }, 2600);
+    }
+    if(rowEl){
+      var pop = document.createElement("span");
+      pop.className = "point-pop" + (delta < 0 ? " minus" : "");
+      pop.textContent = (delta > 0 ? "+" : "−") + Math.abs(delta) + "P";
+      rowEl.appendChild(pop);
+      setTimeout(function(){ if(pop.parentNode) pop.parentNode.removeChild(pop); }, 1100);
+    }
+  }
+
+  /* ───────────── 메모 ───────────── */
+  function renderNotes(){
+    var list = $("#noteList");
+    if(!state.notes.length){
+      list.innerHTML = '<p class="empty" style="grid-column:1/-1;padding:10px 2px">아직 메모가 없어요. 첫 메모를 남겨 보세요.</p>';
+      return;
+    }
+    list.innerHTML = state.notes.map(function(n, idx){
+      var d = new Date(n.at || Date.now());
+      return '<div class="note" data-id="' + n.id + '" style="--nc:' + NOTE_COLORS[idx % NOTE_COLORS.length] + '">' +
+        '<button class="del" data-act="del-notes" data-id="' + n.id + '" aria-label="메모 삭제">✕</button>' +
+        '<p class="note-text" contenteditable="true" spellcheck="false" data-edit="notes:' + n.id + '">' + esc(n.text) + '</p>' +
+        '<span class="note-date">' + (d.getMonth()+1) + '/' + d.getDate() + '</span>' +
+      '</div>';
+    }).join("");
+  }
+
+  /* ───────────── 공통 동작 ───────────── */
+  function findItem(kind, id){
+    var arr = state[kind] || [];
+    for(var i=0;i<arr.length;i++){ if(arr[i].id === id) return arr[i]; }
+    return null;
+  }
+
+  document.addEventListener("click", function(e){
+    var btn = e.target.closest ? e.target.closest("[data-act]") : null;
+    if(!btn) return;
+    var act = btn.dataset.act, id = btn.dataset.id;
+
+    if(act === "toggle-trip"){
+      var tr = findItem("trip", id);
+      if(tr){ tr.done = !tr.done; save(); renderTrip(); }
+      return;
+    }
+    if(act === "toggle-todos"){
+      var td = findItem("todos", id);
+      if(td){
+        td.done = !td.done;
+        save();
+        renderTasks();
+        // 다시 그린 뒤 해당 줄에 +100P 배지를 붙여요
+        bumpPoints(td.done ? PT : -PT, $('.task[data-id="' + id + '"]'));
+      }
+      return;
+    }
+    if(act === "toggle-dinner"){
+      var dn = findItem("dinner", id);
+      if(dn){ dn.ready = !dn.ready; save(); renderDinner(); }
+      return;
+    }
+    if(act.indexOf("del-") === 0){
+      var k = act.slice(4);
+      state[k] = state[k].filter(function(i){ return i.id !== id; });
+      save();
+      if(k === "trip") renderTrip();
+      else if(k === "schedule") renderSchedule();
+      else if(k === "notes") renderNotes();
+      else if(k === "dinner") renderDinner();
+      else renderTasks();
+    }
+  });
+
+  // 인라인 편집 저장
+  document.addEventListener("focusout", function(e){
+    var el = e.target.closest ? e.target.closest("[data-edit]") : null;
+    if(!el) return;
+    var parts = el.dataset.edit.split(":");
+    var kind = parts[0], id = parts[1];
+    var text = (el.innerText || "").replace(/\s+/g, " ").trim();
+    var it = findItem(kind, id);
+    if(!it) return;
+    if(!text){
+      // 빈 내용은 원래 값으로 되돌림
+      el.innerText = it.text;
+      return;
+    }
+    if(it.text !== text){ it.text = text; save(); }
+  });
+
+  document.addEventListener("keydown", function(e){
+    var el = e.target.closest ? e.target.closest("[data-edit]") : null;
+    if(el && e.key === "Enter"){ e.preventDefault(); el.blur(); }
+    if(e.key === "Escape" && !$("#modal").hidden) closeModal();
+  });
+
+  function addItem(kind, text){
+    text = (text || "").trim();
+    if(!text) return false;
+    state[kind].push({ id:uid(), text:text, done:false, at:Date.now() });
+    save();
+    return true;
+  }
+
+  /* ───────────── 이벤트 연결 ───────────── */
+  $("#tripAdd").addEventListener("keydown", function(e){
+    if(e.key !== "Enter") return;
+    e.preventDefault();
+    if(addItem("trip", this.value)){ this.value = ""; renderTrip(); }
+  });
+
+  $("#todoAdd").addEventListener("keydown", function(e){
+    if(e.key !== "Enter") return;
+    e.preventDefault();
+    var v = this.value;
+    if(addItem("todos", v)){ this.value = ""; renderTasks(); }
+  });
+
+  $("#dinnerForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var inp = $("#dinnerAdd");
+    var text = inp.value.trim();
+    if(!text){ inp.focus(); return; }
+    state.dinner.push({ id:uid(), role:$("#dinnerRole").value, text:text, ready:false });
+    save(); inp.value = ""; renderDinner(); inp.focus();
+  });
+
+  $("#schedForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var input = $("#schedInput");
+    var text = input.value.trim();
+    if(!text) { input.focus(); return; }
+    state.schedule.push({
+      id:uid(),
+      dow: parseInt($("#schedDay").value, 10),
+      tag: $("#schedTag").value,
+      text: text
+    });
+    save(); input.value = ""; renderSchedule(); input.focus();
+  });
+
+  $("#memoForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var ta = $("#memoInput");
+    var text = ta.value.trim();
+    if(!text) { ta.focus(); return; }
+    state.notes.unshift({ id:uid(), text:text, at:Date.now() });
+    save(); ta.value = ""; renderNotes(); ta.focus();
+  });
+
+  $("#memoInput").addEventListener("keydown", function(e){
+    if(e.key === "Enter" && !e.shiftKey){
+      e.preventDefault();
+      $("#memoForm").requestSubmit ? $("#memoForm").requestSubmit() : $("#memoForm").dispatchEvent(new Event("submit", {cancelable:true}));
+    }
+  });
+
+  /* 장소 편집 */
+  $("#wPlace").addEventListener("click", function(){
+    var inp = $("#wPlaceInput");
+    inp.value = state.weather.name || "";
+    this.hidden = true;
+    inp.hidden = false;
+    inp.focus(); inp.select();
+  });
+  $("#wPlaceInput").addEventListener("keydown", function(e){
+    if(e.key === "Enter"){
+      e.preventDefault();
+      var v = this.value;
+      this.hidden = true; $("#wPlace").hidden = false;
+      geocodeAndSet(v);
+    } else if(e.key === "Escape"){
+      this.hidden = true; $("#wPlace").hidden = false;
+      renderPlace();
+    }
+  });
+  $("#wPlaceInput").addEventListener("blur", function(){
+    if(this.hidden) return;
+    this.hidden = true; $("#wPlace").hidden = false;
+  });
+
+  /* 초기화 모달 */
+  var modal = $("#modal");
+  function openModal(){ modal.hidden = false; $("#modalOk").focus(); }
+  function closeModal(){ modal.hidden = true; $("#resetBtn").focus(); }
+  $("#resetBtn").addEventListener("click", openModal);
+  $("#modalCancel").addEventListener("click", closeModal);
+  modal.addEventListener("click", function(e){ if(e.target === modal) closeModal(); });
+  $("#modalOk").addEventListener("click", function(){
+    try{ localStorage.removeItem(KEY); localStorage.removeItem(OLD_KEY); }catch(e){}
+    state = defaults();
+    closeModal();
+    renderAll();
+    var hint = $("#ptsHint");
+    if(hint){ hint.textContent = "할 일 하나 = " + PT + "P"; hint.classList.remove("gain"); }
+    setSaveState("샘플로 되돌렸어요");
+  });
+
+  /* ───────────── 렌더 ───────────── */
+  function renderAll(){
+    renderPlace();
+    renderTrip();
+    fillDaySelect();
+    renderSchedule();
+    renderTasks();
+    renderNotes();
+  }
+
+  tickClock();
+  setInterval(tickClock, 1000);
+  renderAll();
+  fetchWeather();
+  setInterval(fetchWeather, 30 * 60 * 1000);
+
+  document.addEventListener("visibilitychange", function(){
+    if(!document.hidden && (!weatherCache || Date.now() - weatherCache.at > 10 * 60 * 1000)) fetchWeather();
+  });
+})();
+</script>
+<script>
+/* 홈 화면 앱으로 열렸을 때 오프라인에서도 마지막 화면이 뜨도록 (실패해도 보드는 그대로 동작해요) */
+if("serviceWorker" in navigator && location.protocol === "https:"){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("sw.js").catch(function(){});
+  });
+}
+</script>
+</body>
+</html>

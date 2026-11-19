@@ -1,0 +1,41 @@
+{
+  "name": "우리 가족 오늘 보드",
+  "short_name": "가족 보드",
+  "description": "우리 가족 오늘 보드 — 날씨, 세부 여행 D-day, 가족 일정, 할 일, 메모를 한 화면에.",
+  "id": "/family-dashboard/",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FAF8F5",
+  "theme_color": "#FAF8F5",
+  "lang": "ko-KR",
+  "dir": "ltr",
+  "categories": ["lifestyle", "productivity"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
