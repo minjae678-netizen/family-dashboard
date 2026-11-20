@@ -1454,8 +1454,9 @@ h1{
   }
 
   function isEditing(){
+    // 붙여 넣는 중인 인라인 글(메모·할 일 이름)만 잠시 건드리지 않아요.
     var el = document.activeElement;
-    return !!(el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)));
+    return !!(el && el.isContentEditable);
   }
 
   function syncFail(msg, fatal){
