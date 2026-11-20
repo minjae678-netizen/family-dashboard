@@ -1785,9 +1785,19 @@ h1{
   function initSync(){
     var meta = readJSON(SYNC_META) || {};
     sync.localAt = Number(meta.localAt) || 0;
-    var c = codeFromUrl();
-    if(c){ joinRoom(c.id, c.key); return; }
     var room = roomStored();
+    var c = codeFromUrl();
+    if(c){
+      if(room && room.id === c.id && room.key === c.key){
+        // 이 기기가 쓰던 방 링크로 다시 연 것 — 오프라인에서 고친 기기 내용을 잃지 않게 시각을 비교해서 맞춰요
+        sync.id = c.id; sync.key = c.key; sync.on = true;
+        sync.status = "busy"; sync.msg = "가족 보드에 연결하는 중이에요";
+        setHash(); renderSync(); startSync(); syncPull();
+        return;
+      }
+      joinRoom(c.id, c.key);
+      return;
+    }
     if(room && room.id && room.key){
       sync.id = room.id; sync.key = room.key; sync.on = true;
       sync.status = "busy"; sync.msg = "가족 보드에 연결하는 중이에요";
