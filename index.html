@@ -389,6 +389,47 @@ h1{
 .memo-add textarea::placeholder{color:var(--faint)}
 .memo-add textarea:focus{outline:none;border-color:#EFB79E;background:#fff;box-shadow:0 0 0 3px #FFF3EC}
 
+/* ── 가족 동기화 ──────────────────────── */
+.syncbar{
+  display:flex;align-items:center;justify-content:space-between;gap:12px 16px;flex-wrap:wrap;
+  padding:clamp(11px,1.2vw,15px) clamp(14px,1.7vw,20px);
+  border-radius:18px;
+  background:linear-gradient(120deg,#FBFDFB 0%,#F7FBF8 52%,#FDFAF5 100%);
+  border:1px solid #E6EEE6;
+  box-shadow:0 1px 2px rgba(72,54,38,.03);
+}
+.syncbar + .card,.grid>.syncbar{animation-delay:0s}
+.sync-left{display:flex;align-items:center;gap:10px;min-width:0}
+.sync-dot{
+  width:9px;height:9px;border-radius:99px;flex:none;background:#CFC7BD;
+  box-shadow:0 0 0 4px rgba(207,199,189,.16);
+  transition:background .25s ease,box-shadow .25s ease;
+}
+.syncbar[data-state="ok"] .sync-dot{background:#4E9E7C;box-shadow:0 0 0 4px rgba(78,158,124,.16)}
+.syncbar[data-state="busy"] .sync-dot{background:var(--amber);box-shadow:0 0 0 4px rgba(223,160,43,.16);animation:pulse 1.5s ease-in-out infinite}
+.syncbar[data-state="error"] .sync-dot{background:var(--coral);box-shadow:0 0 0 4px rgba(232,115,74,.16)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.sync-txt{display:flex;flex-direction:column;min-width:0;line-height:1.35}
+.sync-txt b{font-size:13.5px;font-weight:750;letter-spacing:-0.012em}
+.sync-txt span{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sync-actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.sbtn{
+  font-size:12px;font-weight:700;border-radius:10px;padding:7px 12px;
+  background:#fff;border:1px solid var(--line);color:var(--ink-2);
+  transition:.16s;white-space:nowrap;
+}
+.sbtn:hover{border-color:#E6CAB6;color:var(--coral-deep);background:#FFFCF9}
+.sbtn.primary{background:var(--coral);border-color:var(--coral);color:#fff}
+.sbtn.primary:hover{background:var(--coral-deep);border-color:var(--coral-deep);color:#fff}
+.sbtn[hidden]{display:none!important}
+.sync-link-input{width:100%;margin-top:12px;font-size:12.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.sync-err{color:var(--coral-deep);font-size:12px;margin-top:7px}
+@media (max-width:640px){
+  .sync-actions{width:100%}
+  .sync-actions .sbtn{flex:1 1 auto;text-align:center}
+  .sync-txt span{white-space:normal}
+}
+
 /* ── footer ───────────────────────────── */
 .foot{
   display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
@@ -491,6 +532,23 @@ h1{
         <div class="w-foot" id="wFoot">Open-Meteo · 실시간</div>
       </div>
     </header>
+
+    <!-- ── SYNC ───────────────────────────────── -->
+    <section class="card syncbar span-12" id="syncBar" data-state="off" aria-live="polite">
+      <div class="sync-left">
+        <span class="sync-dot" aria-hidden="true"></span>
+        <div class="sync-txt">
+          <b id="syncTitle">가족 동기화</b>
+          <span id="syncSub">이 기기에만 저장돼요 · 폰·태블릿과 같은 보드로 쓰려면 방을 만들어요</span>
+        </div>
+      </div>
+      <div class="sync-actions">
+        <button class="sbtn primary" id="syncCreate" type="button">새 가족 방 만들기</button>
+        <button class="sbtn" id="syncJoinBtn" type="button">링크로 연결</button>
+        <button class="sbtn" id="syncCopy" type="button" hidden>공유 링크 복사</button>
+        <button class="sbtn" id="syncLeave" type="button" hidden>연결 해제</button>
+      </div>
+    </section>
 
     <!-- ── TRIP ───────────────────────────────── -->
     <section class="card trip" aria-labelledby="tripTitle">
@@ -606,7 +664,7 @@ h1{
   </main>
 
   <footer class="foot">
-    <span>수정한 내용은 이 브라우저에 자동 저장돼요 · <span id="saveState">저장 준비됨</span></span>
+    <span>수정한 내용은 자동 저장돼요 · <span id="saveState">저장 준비됨</span></span>
     <button class="ghost" id="resetBtn" type="button">샘플로 되돌리기</button>
   </footer>
 </div>
@@ -618,6 +676,30 @@ h1{
     <div class="modal-actions">
       <button class="ghost" id="modalCancel" type="button">취소</button>
       <button class="primary" id="modalOk" type="button">되돌리기</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="syncModal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="syncModalTitle">
+    <h3 id="syncModalTitle">가족 보드 링크로 연결</h3>
+    <p>폰이나 태블릿에서 복사한 가족 보드 링크를 붙여 넣어 주세요. 이 기기의 보드가 그 방의 내용으로 맞춰져요.</p>
+    <input class="add-input sync-link-input" id="syncLinkInput" type="text" placeholder="https://…/#sync=•••••••  (또는 방 코드)" autocomplete="off" spellcheck="false" aria-label="가족 보드 링크">
+    <p class="sync-err" id="syncLinkErr" hidden>링크를 알아보지 못했어요. <b>#sync=</b> 가 들어간 주소 전체를 붙여 넣어 주세요.</p>
+    <div class="modal-actions">
+      <button class="ghost" id="syncModalCancel" type="button">취소</button>
+      <button class="primary" id="syncModalOk" type="button">연결</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="syncConfirm" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="syncConfirmTitle">
+    <h3 id="syncConfirmTitle">확인</h3>
+    <p id="syncConfirmText"></p>
+    <div class="modal-actions">
+      <button class="ghost" id="syncConfirmCancel" type="button">취소</button>
+      <button class="primary" id="syncConfirmOk" type="button">확인</button>
     </div>
   </div>
 </div>
@@ -740,14 +822,17 @@ h1{
     try{ return JSON.parse(localStorage.getItem(WCACHE) || "null"); }catch(e){ return null; }
   }
   function save(){
+    sync.localAt = Date.now();
+    writeSyncMeta();
     try{
       localStorage.setItem(KEY, JSON.stringify(state));
       storageOK = true;
-      setSaveState("저장됨 · " + hhmm(new Date()));
+      setSaveState((sync.on ? "이 기기 + 가족 보드 · " : "저장됨 · ") + hhmm(new Date()));
     }catch(e){
       storageOK = false;
       setSaveState("이 브라우저에는 저장할 수 없어요");
     }
+    if(sync.on) syncPush(false);
   }
   function setSaveState(t){ var el = $("#saveState"); if(el) el.textContent = t; }
 
@@ -1184,7 +1269,11 @@ h1{
   document.addEventListener("keydown", function(e){
     var el = e.target.closest ? e.target.closest("[data-edit]") : null;
     if(el && e.key === "Enter"){ e.preventDefault(); el.blur(); }
-    if(e.key === "Escape" && !$("#modal").hidden) closeModal();
+    if(e.key === "Escape"){
+      if(!$("#modal").hidden) closeModal();
+      if(!$("#syncModal").hidden) closeSyncModal();
+      if(!$("#syncConfirm").hidden) closeConfirm();
+    }
   });
 
   function addItem(kind, text){
@@ -1282,12 +1371,425 @@ h1{
   $("#modalOk").addEventListener("click", function(){
     try{ localStorage.removeItem(KEY); localStorage.removeItem(OLD_KEY); }catch(e){}
     state = defaults();
+    sync.localAt = Date.now();
+    writeSyncMeta();
     closeModal();
     renderAll();
+    if(sync.on) syncPush(true);
     var hint = $("#ptsHint");
     if(hint){ hint.textContent = "할 일 하나 = " + PT + "P"; hint.classList.remove("gain"); }
     setSaveState("샘플로 되돌렸어요");
   });
+
+  /* ───────────── 가족 동기화 ─────────────
+     · 가족 방(빈) 하나에 보드 전체를 JSON으로 두고, 변경은 0.9초 디바운스로 올려요.
+     · 6초마다, 탭이 다시 보일 때·창이 앞으로 올 때·인터넷이 돌아올 때 받아와요.
+     · 서버에 못 붙어도 이 기기(localStorage)는 그대로 쓰고, 연결되면 다시 맞춰요. */
+  var SYNC_API   = "https://extendsclass.com/api/json-storage/bin/";
+  var SYNC_STORE = "familyBoard.sync.v1";        // 이 기기에 기억해 둔 가족 방 (id + key)
+  var SYNC_META  = "familyBoard.syncmeta.v1";    // 마지막으로 이 기기에서 바꾼 시각
+  var SYNC_EVERY = 6000;
+  var SYNC_LAG   = 500;                          // 기기 시계 오차 여유
+  var SYNC_TEXT  = "이 기기에만 저장돼요 · 폰·태블릿과 같은 보드로 쓰려면 방을 만들어요";
+
+  var sync = {
+    id:"", key:"", on:false,
+    status:"off",                                 // off | busy | ok | error | offline
+    err:"", msg:"",
+    localAt:0, remoteAt:0, lastOkAt:0,
+    pushing:false, pulling:false,
+    pushTimer:null, msgTimer:null, pollTimer:null
+  };
+  var DEVICE_NAME = deviceLabel();
+
+  function deviceLabel(){
+    var ua = navigator.userAgent || "";
+    if(/iPhone/i.test(ua)) return "아이폰";
+    if(/iPad/i.test(ua)) return "아이패드";
+    if(/Android/i.test(ua)) return (navigator.maxTouchPoints > 1 ? "안드로이드 태블릿" : "안드로이드 폰");
+    if(/Macintosh/i.test(ua)) return "맥";
+    if(/Windows/i.test(ua)) return "PC";
+    return "이 기기";
+  }
+
+  function readJSON(k){ try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
+  function roomStored(){ return readJSON(SYNC_STORE); }
+  function writeSyncMeta(){ try{ localStorage.setItem(SYNC_META, JSON.stringify({ localAt: sync.localAt })); }catch(e){} }
+  function roomLink(){ return location.origin + location.pathname + "#sync=" + sync.id + "." + sync.key; }
+
+  /* 서비스 응답 뒤에 붙는 덧붙은 HTML을 걸러내고 앞쪽 JSON만 꺼내요 */
+  function parseBin(text){
+    text = String(text == null ? "" : text).trim();
+    if(!text) return null;
+    try{ return JSON.parse(text); }catch(e){}
+    var s = text.indexOf("{");
+    if(s < 0) return null;
+    var depth = 0, inStr = false, esc2 = false;
+    for(var i = s; i < text.length; i++){
+      var c = text.charAt(i);
+      if(inStr){
+        if(esc2) esc2 = false;
+        else if(c === "\\") esc2 = true;
+        else if(c === '"') inStr = false;
+      } else if(c === '"') inStr = true;
+      else if(c === "{") depth++;
+      else if(c === "}"){
+        depth--;
+        if(depth === 0){ try{ return JSON.parse(text.slice(s, i + 1)); }catch(e){ return null; } }
+      }
+    }
+    return null;
+  }
+
+  function newRoomKey(){
+    var a = new Uint8Array(15), hex = "0123456789abcdef", out = "";
+    if(window.crypto && window.crypto.getRandomValues) window.crypto.getRandomValues(a);
+    else for(var i = 0; i < a.length; i++) a[i] = Math.floor(Math.random() * 256);
+    for(var j = 0; j < a.length; j++) out += hex.charAt(a[j] >> 4) + hex.charAt(a[j] & 15);
+    return out;
+  }
+
+  function payload(){
+    return { app:"family-board", v:2, updatedAt: sync.localAt || Date.now(), by: DEVICE_NAME, board: state };
+  }
+
+  function isEditing(){
+    var el = document.activeElement;
+    return !!(el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)));
+  }
+
+  function syncFail(msg, fatal){
+    sync.err = msg;
+    sync.status = "error";
+    if(fatal){
+      sync.on = false;
+      sync.id = ""; sync.key = "";
+      try{ localStorage.removeItem(SYNC_STORE); }catch(e){}
+      sync.msg = msg;
+      try{ history.replaceState(null, "", location.pathname + location.search); }catch(e){}
+      afterMsg();
+    }
+    renderSync();
+  }
+
+  function afterMsg(){
+    clearTimeout(sync.msgTimer);
+    sync.msgTimer = setTimeout(function(){ sync.msg = ""; renderSync(); }, 9000);
+  }
+
+  function adoptRemote(board, at){
+    state = normalize(board, defaults());
+    sync.localAt = at;
+    writeSyncMeta();
+    try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+    renderAll();
+    setSaveState("가족 보드에서 불러옴 · " + hhmm(new Date(at)));
+  }
+
+  function syncPull(isJoin){
+    if(!sync.on || sync.pulling) return;
+    sync.pulling = true;
+    var url = SYNC_API + encodeURIComponent(sync.id) + "?t=" + Date.now();
+    fetch(url, { method:"GET", cache:"no-store", headers:{ "Security-key": sync.key } })
+      .then(function(r){ return r.text().then(function(t){ return { code:r.status, text:t }; }); })
+      .then(function(res){
+        sync.pulling = false;
+        var d = parseBin(res.text);
+        if(res.code === 401 || res.code === 403){
+          syncFail("가족 방 열쇠가 맞지 않아요 — 링크를 다시 확인해 주세요", true);
+          return;
+        }
+        if(res.code === 404 || (d && d.status === 1 && /not found/i.test(d.message || ""))){
+          syncFail("가족 방을 찾을 수 없어요 — 새 방을 만들어 링크를 다시 나눠 주세요", true);
+          return;
+        }
+        if(res.code !== 200 || !d){
+          syncFail("가족 보드를 읽지 못했어요");
+          return;
+        }
+        sync.status = "ok"; sync.err = ""; sync.lastOkAt = Date.now();
+        sync.remoteAt = Number(d.updatedAt) || 0;
+        var board = (d && d.board) ? d.board : null;
+        if(!board){
+          syncPush(true);
+          renderSync();
+          return;
+        }
+        if(isJoin){
+          adoptRemote(board, sync.remoteAt || Date.now());
+          sync.msg = "이 방의 보드를 불러왔어요";
+          afterMsg(); renderSync();
+          return;
+        }
+        if(sync.remoteAt > sync.localAt + SYNC_LAG){
+          if(isEditing()){ renderSync(); return; }
+          adoptRemote(board, sync.remoteAt);
+          sync.msg = "다른 기기에서 바뀐 내용을 불러왔어요";
+          afterMsg(); renderSync();
+          return;
+        }
+        if(sync.localAt > sync.remoteAt + SYNC_LAG) syncPush(true);
+        else renderSync();
+      })
+      .catch(function(){
+        sync.pulling = false;
+        sync.status = "offline";
+        sync.err = "인터넷 연결을 확인해 주세요";
+        renderSync();
+      });
+  }
+
+  function syncPush(now){
+    if(!sync.on) return;
+    clearTimeout(sync.pushTimer);
+    if(!now){
+      sync.pushTimer = setTimeout(function(){ syncPush(true); }, 900);
+      return;
+    }
+    if(sync.pushing){ sync.pushTimer = setTimeout(function(){ syncPush(true); }, 1500); return; }
+    sync.pushing = true;
+    var body = JSON.stringify(payload());
+    fetch(SYNC_API + encodeURIComponent(sync.id) + "?t=" + Date.now(), {
+      method:"PUT", cache:"no-store",
+      headers:{ "Content-Type":"application/json", "Security-key": sync.key },
+      body: body
+    }).then(function(r){ return r.text().then(function(t){ return { code:r.status, text:t }; }); })
+      .then(function(res){
+        sync.pushing = false;
+        var d = parseBin(res.text) || {};
+        if(res.code === 401 || res.code === 403 || res.code === 404 || d.status === 1){
+          syncFail(d.message || "가족 보드에 올리지 못했어요");
+          return;
+        }
+        if(res.code !== 200){ syncFail("가족 보드에 올리지 못했어요"); return; }
+        sync.status = "ok"; sync.err = ""; sync.lastOkAt = Date.now();
+        sync.remoteAt = Math.max(sync.remoteAt, sync.localAt);
+        renderSync();
+      })
+      .catch(function(){
+        sync.pushing = false;
+        sync.status = "offline";
+        sync.err = "인터넷 연결을 확인해 주세요";
+        renderSync();
+      });
+  }
+
+  function startSync(){
+    if(sync.pollTimer) clearInterval(sync.pollTimer);
+    sync.pollTimer = setInterval(function(){
+      if(document.hidden) return;
+      syncPull();
+    }, SYNC_EVERY);
+  }
+
+  function setHash(){
+    var h = "#sync=" + sync.id + "." + sync.key;
+    try{
+      if(location.hash !== h) history.replaceState(null, "", location.pathname + location.search + h);
+    }catch(e){ location.hash = h.slice(1); }
+  }
+
+  function parseCode(raw){
+    var s = String(raw || "").trim();
+    if(!s) return null;
+    var m = s.match(/sync=([^&\s]+)/);
+    if(m) s = decodeURIComponent(m[1]);
+    s = s.replace(/^[<"'\s]+|[>"'\s]+$/g, "");
+    var i = s.indexOf(".");
+    if(i < 1) return null;
+    var id = s.slice(0, i).trim(), key = s.slice(i + 1).trim();
+    if(!/^[A-Za-z0-9_-]{4,40}$/.test(id) || key.length < 6) return null;
+    return { id:id, key:key };
+  }
+
+  function codeFromUrl(){
+    var m = (location.hash || "").match(/sync=([^&\s]+)/) || (location.search || "").match(/[?&]sync=([^&\s]+)/);
+    if(!m) return null;
+    var c = null;
+    try{ c = parseCode(decodeURIComponent(m[1])); }catch(e){ c = parseCode(m[1]); }
+    return c;
+  }
+
+  function joinRoom(id, key){
+    sync.id = id; sync.key = key; sync.on = true;
+    sync.status = "busy"; sync.err = ""; sync.msg = "가족 보드에 연결하는 중이에요";
+    try{ localStorage.setItem(SYNC_STORE, JSON.stringify({ id:id, key:key, at:Date.now() })); }catch(e){}
+    setHash();
+    renderSync();
+    startSync();
+    syncPull(true);
+  }
+
+  function createRoom(){
+    var key = newRoomKey();
+    var prev = { id: sync.id, key: sync.key, on: sync.on };
+    sync.localAt = Date.now();
+    writeSyncMeta();
+    sync.status = "busy"; sync.err = ""; sync.msg = "새 가족 방을 만드는 중이에요";
+    renderSync();
+    fetch(SYNC_API, {
+      method:"POST", cache:"no-store",
+      headers:{ "Content-Type":"application/json", "Security-key": key, "Private": "true" },
+      body: JSON.stringify(payload())
+    }).then(function(r){ return r.text(); }).then(function(t){
+      var d = parseBin(t);
+      if(!d || !d.id){
+        sync.id = prev.id; sync.key = prev.key; sync.on = prev.on;
+        sync.status = prev.on ? "error" : "off";
+        sync.msg = prev.on ? "" : "가족 방을 만들지 못했어요 — 잠시 뒤 다시 해 주세요";
+        sync.err = prev.on ? "가족 방을 만들지 못했어요" : "";
+        afterMsg(); renderSync();
+        return;
+      }
+      sync.id = d.id; sync.key = key; sync.on = true;
+      sync.status = "ok"; sync.err = ""; sync.remoteAt = sync.localAt; sync.lastOkAt = Date.now();
+      try{ localStorage.setItem(SYNC_STORE, JSON.stringify({ id:sync.id, key:sync.key, at:Date.now() })); }catch(e){}
+      setHash();
+      startSync();
+      sync.msg = "가족 방을 만들었어요 · 공유 링크를 폰·태블릿에서 열어 주세요";
+      afterMsg(); renderSync();
+      setSaveState("가족 보드에 올림 · " + hhmm(new Date()));
+    }).catch(function(){
+      sync.id = prev.id; sync.key = prev.key; sync.on = prev.on;
+      sync.status = prev.on ? "error" : "off";
+      sync.msg = prev.on ? "" : "연결이 안 돼 가족 방을 만들지 못했어요";
+      sync.err = prev.on ? "연결이 안 돼요" : "";
+      afterMsg(); renderSync();
+    });
+  }
+
+  function renderSync(){
+    var bar = $("#syncBar");
+    if(!bar) return;
+    var title = $("#syncTitle"), sub = $("#syncSub");
+    var bCreate = $("#syncCreate"), bJoin = $("#syncJoinBtn"), bCopy = $("#syncCopy"), bLeave = $("#syncLeave");
+    bar.dataset.state = !sync.on ? "off" : (sync.status === "ok" ? "ok" : (sync.status === "error" ? "error" : "busy"));
+
+    if(!sync.on){
+      title.textContent = "가족 동기화";
+      sub.textContent = sync.msg || SYNC_TEXT;
+      bCreate.hidden = false; bJoin.hidden = false; bCopy.hidden = true; bLeave.hidden = true;
+      return;
+    }
+    bCreate.hidden = true; bJoin.hidden = true; bCopy.hidden = false; bLeave.hidden = false;
+
+    if(sync.status === "busy"){
+      title.textContent = "가족 보드에 연결 중…";
+      sub.textContent = sync.msg || "다른 기기와 맞추는 중이에요";
+    } else if(sync.status === "error"){
+      title.textContent = "가족 보드에 연결하지 못했어요";
+      sub.textContent = (sync.err || "이 기기에는 그대로 저장돼 있어요") + " · 다음 차례에 다시 해요";
+    } else if(sync.status === "offline"){
+      title.textContent = "오프라인 — 이 기기에 저장 중";
+      sub.textContent = "연결되면 가족 보드에 자동으로 올려요";
+    } else {
+      title.textContent = "가족 보드와 연결됨";
+      sub.textContent = (sync.lastOkAt ? "마지막 동기화 " + hhmm(new Date(sync.lastOkAt)) : "동기화 준비됨") +
+        (sync.msg ? " · " + sync.msg : "");
+    }
+  }
+
+  function copyRoomLink(){
+    var link = roomLink();
+    function done(){ sync.msg = "공유 링크를 복사했어요"; afterMsg(); renderSync(); }
+    function fallback(){
+      var ta = document.createElement("textarea");
+      ta.value = link; ta.setAttribute("readonly", "");
+      ta.style.position = "fixed"; ta.style.top = "-1000px"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, link.length);
+      var okc = false;
+      try{ okc = document.execCommand("copy"); }catch(e){ okc = false; }
+      document.body.removeChild(ta);
+      if(okc) done();
+      else { sync.msg = "링크를 복사하지 못했어요 — 주소창의 링크를 길게 눌러 복사해 주세요"; afterMsg(); renderSync(); }
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(link).then(done, fallback);
+    } else fallback();
+  }
+
+  /* 확인 창 */
+  var syncConfirm = $("#syncConfirm"), confirmAction = null;
+  function askSync(title, text, okLabel, fn){
+    $("#syncConfirmTitle").textContent = title;
+    $("#syncConfirmText").textContent = text;
+    $("#syncConfirmOk").textContent = okLabel;
+    confirmAction = fn;
+    syncConfirm.hidden = false;
+    $("#syncConfirmOk").focus();
+  }
+  function closeConfirm(){ syncConfirm.hidden = true; confirmAction = null; }
+  $("#syncConfirmCancel").addEventListener("click", closeConfirm);
+  $("#syncConfirmOk").addEventListener("click", function(){ var fn = confirmAction; closeConfirm(); if(fn) fn(); });
+  syncConfirm.addEventListener("click", function(e){ if(e.target === syncConfirm) closeConfirm(); });
+
+  /* 링크로 연결 창 */
+  var syncModal = $("#syncModal");
+  function openSyncModal(){
+    $("#syncLinkErr").hidden = true;
+    $("#syncLinkInput").value = "";
+    syncModal.hidden = false;
+    $("#syncLinkInput").focus();
+  }
+  function closeSyncModal(){ syncModal.hidden = true; }
+  $("#syncModalCancel").addEventListener("click", closeSyncModal);
+  syncModal.addEventListener("click", function(e){ if(e.target === syncModal) closeSyncModal(); });
+  $("#syncModalOk").addEventListener("click", function(){
+    var c = parseCode($("#syncLinkInput").value);
+    if(!c){ $("#syncLinkErr").hidden = false; $("#syncLinkInput").focus(); return; }
+    closeSyncModal();
+    joinRoom(c.id, c.key);
+  });
+  $("#syncLinkInput").addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ e.preventDefault(); $("#syncModalOk").click(); }
+  });
+
+  $("#syncCreate").addEventListener("click", function(){
+    if(sync.on){
+      askSync("새 가족 방을 만들까요?",
+        "지금 쓰는 방과는 따로 저장돼요. 새 링크를 폰·태블릿에서 다시 열어야 함께 써요. 이 기기의 보드 내용은 그대로 옮겨 담아요.",
+        "새로 만들기", createRoom);
+      return;
+    }
+    createRoom();
+  });
+  $("#syncJoinBtn").addEventListener("click", openSyncModal);
+  $("#syncCopy").addEventListener("click", copyRoomLink);
+  $("#syncLeave").addEventListener("click", function(){
+    askSync("가족 동기화를 끊을까요?",
+      "이 기기에서는 그대로 쓰고, 가족 보드와는 더 이상 맞추지 않아요. 다시 연결하려면 공유 링크가 필요해요.",
+      "연결 해제", function(){
+        try{ localStorage.removeItem(SYNC_STORE); }catch(e){}
+        if(sync.pollTimer) clearInterval(sync.pollTimer);
+        clearTimeout(sync.pushTimer); clearTimeout(sync.msgTimer);
+        sync.on = false; sync.id = ""; sync.key = ""; sync.status = "off"; sync.msg = "가족 동기화를 끊었어요";
+        try{ history.replaceState(null, "", location.pathname + location.search); }catch(e){}
+        afterMsg(); renderSync();
+      });
+  });
+
+  window.addEventListener("focus", function(){ if(sync.on) syncPull(); });
+  document.addEventListener("visibilitychange", function(){ if(!document.hidden && sync.on) syncPull(); });
+  window.addEventListener("online", function(){ if(sync.on) syncPull(); });
+  window.addEventListener("hashchange", function(){
+    var c = codeFromUrl();
+    if(c && (c.id !== sync.id || c.key !== sync.key)) joinRoom(c.id, c.key);
+  });
+
+  function initSync(){
+    var meta = readJSON(SYNC_META) || {};
+    sync.localAt = Number(meta.localAt) || 0;
+    var c = codeFromUrl();
+    if(c){ joinRoom(c.id, c.key); return; }
+    var room = roomStored();
+    if(room && room.id && room.key){
+      sync.id = room.id; sync.key = room.key; sync.on = true;
+      sync.status = "busy"; sync.msg = "가족 보드에 연결하는 중이에요";
+      setHash(); renderSync(); startSync(); syncPull();
+      return;
+    }
+    renderSync();
+  }
 
   /* ───────────── 렌더 ───────────── */
   function renderAll(){
@@ -1302,6 +1804,7 @@ h1{
   tickClock();
   setInterval(tickClock, 1000);
   renderAll();
+  initSync();
   fetchWeather();
   setInterval(fetchWeather, 30 * 60 * 1000);
 

@@ -1,6 +1,6 @@
 /* 우리 가족 오늘 보드 — 오프라인에서도 마지막 화면이 열리도록 하는 최소 서비스 워커.
-   같은 주소(GitHub Pages)의 정적 파일만 캐시하고, 날씨 API 요청은 그대로 통과시켜요. */
-var CACHE = "family-board-v1";
+   같은 주소(GitHub Pages)의 정적 파일만 캐시하고, 날씨 API·가족 동기화 요청은 그대로 통과시켜요. */
+var CACHE = "family-board-v3";
 var SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", function (e) {
@@ -23,7 +23,7 @@ self.addEventListener("fetch", function (e) {
   var req = e.request;
   if (req.method !== "GET") return;
   var url = new URL(req.url);
-  if (url.origin !== self.location.origin) return;   // 폰트·날씨 API는 브라우저에 맡겨요
+  if (url.origin !== self.location.origin) return;   // 폰트·날씨 API·가족 동기화는 브라우저에 맡겨요
 
   e.respondWith(
     fetch(req).then(function (res) {
