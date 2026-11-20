@@ -1791,7 +1791,7 @@ h1{
       if(room && room.id === c.id && room.key === c.key){
         // 이 기기가 쓰던 방 링크로 다시 연 것 — 오프라인에서 고친 기기 내용을 잃지 않게 시각을 비교해서 맞춰요
         sync.id = c.id; sync.key = c.key; sync.on = true;
-        sync.status = "busy"; sync.msg = "가족 보드에 연결하는 중이에요";
+        sync.status = "busy"; sync.msg = "";
         setHash(); renderSync(); startSync(); syncPull();
         return;
       }
@@ -1800,7 +1800,7 @@ h1{
     }
     if(room && room.id && room.key){
       sync.id = room.id; sync.key = room.key; sync.on = true;
-      sync.status = "busy"; sync.msg = "가족 보드에 연결하는 중이에요";
+      sync.status = "busy"; sync.msg = "";
       setHash(); renderSync(); startSync(); syncPull();
       return;
     }
