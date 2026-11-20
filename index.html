@@ -823,6 +823,7 @@ h1{
   }
   function save(){
     sync.localAt = Date.now();
+    sync.idleAt = Date.now();
     writeSyncMeta();
     try{
       localStorage.setItem(KEY, JSON.stringify(state));
@@ -1396,7 +1397,7 @@ h1{
     id:"", key:"", on:false,
     status:"off",                                 // off | busy | ok | error | offline
     err:"", msg:"",
-    localAt:0, remoteAt:0, lastOkAt:0,
+    localAt:0, remoteAt:0, lastOkAt:0, lastPullAt:0, idleAt:Date.now(),
     pushing:false, pulling:false,
     pushTimer:null, msgTimer:null, pollTimer:null
   };
@@ -1481,6 +1482,7 @@ h1{
   function adoptRemote(board, at){
     state = normalize(board, defaults());
     sync.localAt = at;
+    sync.idleAt = Date.now();
     writeSyncMeta();
     try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
     renderAll();
@@ -1490,6 +1492,7 @@ h1{
   function syncPull(isJoin){
     if(!sync.on || sync.pulling) return;
     sync.pulling = true;
+    sync.lastPullAt = Date.now();
     var url = SYNC_API + encodeURIComponent(sync.id) + "?t=" + Date.now();
     fetch(url, { method:"GET", cache:"no-store", headers:{ "Security-key": sync.key } })
       .then(function(r){ return r.text().then(function(t){ return { code:r.status, text:t }; }); })
@@ -1578,7 +1581,9 @@ h1{
   function startSync(){
     if(sync.pollTimer) clearInterval(sync.pollTimer);
     sync.pollTimer = setInterval(function(){
-      if(document.hidden) return;
+      if(!sync.on || document.hidden) return;
+      // 한참 안 건드리고 있으면 20초에 한 번만 물어봐요 (무료 저장소에 부담을 줄이려고요)
+      if(Date.now() - sync.idleAt > 120000 && Date.now() - sync.lastPullAt < 18000) return;
       syncPull();
     }, SYNC_EVERY);
   }
@@ -1769,9 +1774,9 @@ h1{
       });
   });
 
-  window.addEventListener("focus", function(){ if(sync.on) syncPull(); });
-  document.addEventListener("visibilitychange", function(){ if(!document.hidden && sync.on) syncPull(); });
-  window.addEventListener("online", function(){ if(sync.on) syncPull(); });
+  window.addEventListener("focus", function(){ if(sync.on){ sync.idleAt = Date.now(); syncPull(); } });
+  document.addEventListener("visibilitychange", function(){ if(!document.hidden && sync.on){ sync.idleAt = Date.now(); syncPull(); } });
+  window.addEventListener("online", function(){ if(sync.on){ sync.idleAt = Date.now(); syncPull(); } });
   window.addEventListener("hashchange", function(){
     var c = codeFromUrl();
     if(c && (c.id !== sync.id || c.key !== sync.key)) joinRoom(c.id, c.key);
